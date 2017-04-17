@@ -6,16 +6,19 @@
 
 list_process_tree ()
 {
+    local IFS=$'\n'
     local p="$1"
-    local monitor="$2" # recursive calls have no $2 - ok
-    local children
+    local monitor="$2" # recursive calls have no $2
+    # child processes ppid="$p"
+    local -a children=($(ps -o ppid= -o pid= |
+        grep '^[ '$'\t'"]*$p\b" |
+        cut -d' ' -f2
+    ))
     if [[ ${monitor:+1} ]] ; then
-        children=$(ps -o pid= --ppid "$p" | grep -v "\b$monitor\$")
-    else
-        children=$(ps -o pid= --ppid "$p")
+        children=($(echo "${children[*]}" | grep -v "\b$monitor\$"))
     fi
 
-    for pid in $children
+    for pid in "${children[@]}"
     do
         list_process_tree "$pid"
     done
