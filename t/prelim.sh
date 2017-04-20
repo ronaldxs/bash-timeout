@@ -27,9 +27,8 @@ echo $? after f
 timely 2 bash -c "f whistle bustle"
 echo $? after f
 
-sudo bash -c "echo 3 >/proc/sys/vm/drop_caches"
 echo before find
-timely 2 bash -c "find / '*.pl' >/dev/null"
+timely 3 find $(dirname "$0")/seq-dir/ -exec bash -c 'echo {}; sleep 2' \;
 echo $? after find
 
 timely 5 ls -l
