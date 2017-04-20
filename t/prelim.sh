@@ -29,7 +29,7 @@ echo $? after f
 
 sudo bash -c "echo 3 >/proc/sys/vm/drop_caches"
 echo before find
-timely 4 bash -c "find / '*.pl' >/dev/null"
+timely 2 bash -c "find / '*.pl' >/dev/null"
 echo $? after find
 
 timely 5 ls -l

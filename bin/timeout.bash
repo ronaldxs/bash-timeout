@@ -12,7 +12,7 @@ list_process_tree ()
     # child processes ppid="$p"
     local -a children=($(ps -o ppid= -o pid= |
         grep '^[ '$'\t'"]*$p\b" |
-        sed 's/[[:blank:]]]*[0-9][0-9]*[[:blank:]][[:blank:]]*\([0-9][0-9]*\)/\1/'
+        sed 's/[[:blank:]]*[0-9][0-9]*[[:blank:]][[:blank:]]*\([0-9][0-9]*\)/\1/'
     ))
     if [[ ${monitor:+1} ]] ; then
         children=($(echo "${children[*]}" | grep -v "\b$monitor\$"))
