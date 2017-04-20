@@ -4,16 +4,44 @@
 # Copyright (C) Ronald Schmidt
 # GPL License should be included in source repository.
 
+# overkill for systems like cygwin (supports timeout anyway) without POSIX ps
+# ps -f starts with UID, PID, PPID
+# for fancier parsing allowing UID with space we find end of PPID column
+_b_timeout_precompute_ps_f_prefix () {
+    if ! ps -p "$$" -o ppid= >/dev/null 2>&1; then
+        local header_line=$(ps -f -p "$$" | head -1);
+        header_line="${header_line%%PPID*}"
+        # length of title line up to end of PPID column title
+        # ps pids seem to right align with columnt titles
+        echo $(( ${#header_line} + 4 ))
+    fi
+}
+
+# overkill for systems like cygwin (supports timeout anyway) without POSIX ps
+_b_timeout_child_pid_ps_f () {
+    ps -f | tail -n+2 |
+        sed "s/^.\{1,$_precomp_ps_f_prefix\}\b\([0-9][0-9]*\)[ \t][ \t]*\([0-9][0-9]*\)\b.*/\2 \1/"
+}
+
 list_process_tree ()
 {
     local IFS=$'\n'
     local p="$1"
     local monitor="$2" # recursive calls have no $2
+
     # child processes ppid="$p"
-    local -a children=($(ps -o ppid= -o pid= |
-        grep '^[ '$'\t'"]*$p\b" |
-        cut -d' ' -f2
-    ))
+    local -a pid_by_parent
+            echo misery two >&2
+            echo $_precomp_ps_f_prefix >&2
+    if ! (( $_precomp_ps_f_prefix )) ; then # if POSIXy ps
+        pid_by_parent=($(ps -o ppid= -o pid=))
+    else
+        pid_by_parent=($(_b_timeout_child_pid_ps_f))
+    fi
+    local -a children=($(echo "${pid_by_parent[*]}" |
+            grep '^[ '$'\t'"]*$p\b" |
+            cut -d' ' -f2
+        ))
     if [[ ${monitor:+1} ]] ; then
         children=($(echo "${children[*]}" | grep -v "\b$monitor\$"))
     fi
@@ -22,6 +50,7 @@ list_process_tree ()
     do
         list_process_tree "$pid"
     done
+
 
     echo "$p"
 }
@@ -49,7 +78,13 @@ list_process_tree ()
         exec 2>&3 # normal stderr for sub process
         mainpid=$(sh -c 'echo $PPID')
         (
+            _precomp_ps_f_prefix="$(_b_timeout_precompute_ps_f_prefix)"
+
             sleep $time_limit
+
+            echo misery one >&2
+            echo $_precomp_ps_f_prefix >&2
+
             monitor_pid=$(sh -c 'echo $PPID')
 #            ps
 

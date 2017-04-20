@@ -6,7 +6,7 @@ function f {
     echo waddle
     echo puddle
     echo "$@"
-    sleep 4
+    sleep 6
 }
 
 function timely {
@@ -22,11 +22,11 @@ function timely {
 
 export TIMEOUT_IGNORE_CMD=1
 export -f f
-timely 5 bash -c "f whistle bustle"
-echo $? after f
+# timely 5 bash -c "f whistle bustle"
+# echo $? after f
 timely 2 bash -c "f whistle bustle"
 echo $? after f
-
+exit
 sudo bash -c "echo 3 >/proc/sys/vm/drop_caches"
 echo before find
 timely 4 bash -c "find / '*.pl' >/dev/null"

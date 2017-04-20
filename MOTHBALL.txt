@@ -1,0 +1,7 @@
+Trying to use ps -f for compatability with cygwin which has
+timeout as a coreutil anyway.
+
+Seems to crash and reboot Windows 10.
+
+MalwareBytes slows down cygwin bash so much that we can't kill
+a simple process tree in 2 seconds.
