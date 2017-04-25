@@ -4,8 +4,16 @@
 # Copyright (C) Ronald Schmidt
 # GPL License should be included in source repository.
 
-list_process_tree ()
-{
+# no set_pgrp and no asychronous wait
+
+if ! [[
+    -z $B_TIMEOUT_IGNORE_CMD    &&
+    -n $(type -p timeout 2>&1)
+]] ; then
+
+# only define functions if no timeout program or specified override
+
+function _b_timeout_list_process_tree {
     local IFS=$'\n'
     local p="$1"
     local monitor="$2" # recursive calls have no $2
@@ -20,20 +28,21 @@ list_process_tree ()
 
     for pid in "${children[@]}"
     do
-        list_process_tree "$pid"
+        echo "$pid"
+        _b_timeout_list_process_tree "$pid"
     done
-
-    echo "$p"
 }
 
-[[   -z $TIMEOUT_IGNORE_CMD         &&
-     -n $(type -p timeout 2>&1)
-]] || function timeout {
+# The part of bash timeout after argument processing
+function _b_timeout_main {
     echo in bash timeout
 
-    local exit_code time_limit=$1 prog=$2 timeout_marker
+    local exit_code time_limit=$1 prog="$2" timeout_marker kill_monitor_pid
     shift 2
-    if [[ -z $TIMEOUT_NO_RC_124 ]]; then
+
+    # create timeout marker file whose presenc will cause 124 exit code later
+    # unless opt out with -p option or environment
+    if [[ -z $b_lcl_is_preserve_exit && -z $B_TIMEOUT_NO_RC_124 ]]; then
         timeout_marker=$(
             mktemp -q ||
             mktemp -q -t "$(basename "$0").XXXXXX"
@@ -57,17 +66,21 @@ list_process_tree ()
             if [[ -n ${timeout_marker:+1} ]]; then
                 rm "$timeout_marker"
             fi
-
-            kill $(list_process_tree $mainpid $monitor_pid)
+            kill $b_lcl_alt_signal $(
+                _b_timeout_list_process_tree $mainpid $monitor_pid
+            ) $mainpid
         ) &
         watchdogpid=$!
-        ${prog} "$@"
+#        echo `date` before prog >>/tmp/xx
+        "$prog" "$@"
         exit_code=$?
+echo after prog exec >&2
+#        echo `date` after prog >>/tmp/xx
         kill $watchdogpid
+#        echo $(date) kill watchdog >>/tmp/xx
         exit $exit_code
     )
     exit_code=$?
-
     exec 2>&3 # restore stderr
     exec 3>&- # close dup stderr
 
@@ -79,7 +92,34 @@ list_process_tree ()
         fi
     fi
 
-#    ps
     return $exit_code
 }
 
+function timeout {
+    local b_lcl_timeout_to_kill b_lcl_alt_signal b_lcl_is_preserve_exit 
+
+    while getopts ps: opt; do
+        case "$opt" in
+            p)  b_lcl_is_preserve_exit=1
+                ;;
+            s)  b_lcl_alt_signal="-$OPTARG"
+                sleep 3 & # just to validate kill signal
+                if ! kill "$b_lcl_alt_signal" $! ; then
+                    echo Validation of signal for '-s' option failed. >&2
+                    return 1
+                fi 
+                ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    # test timeout duration by sleeping with zeroed out duration
+    if ! sleep "${1//[1-9]/0}" ; then
+        echo invalid timeout duration: >&2
+        echo $'\t'Duration incompatible with sleep after substituting 0 for digits.>&2
+        return 1;
+    fi
+    _b_timeout_main "$@"
+}
+
+fi # end test for use existing timeout program at top of file

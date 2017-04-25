@@ -20,7 +20,7 @@ function timely {
     $(dirname "$0")/../bin/b_timeout $time_limit "$@"
 }
 
-export TIMEOUT_IGNORE_CMD=1
+export B_TIMEOUT_IGNORE_CMD=1
 export -f f
 timely 5 bash -c "f whistle bustle"
 echo $? after f
