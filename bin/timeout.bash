@@ -35,7 +35,7 @@ function _b_timeout_list_process_tree {
 
 # The part of bash timeout after argument processing
 function _b_timeout_main {
-    echo in bash timeout
+#    echo in bash timeout
 
     local exit_code time_limit=$1 prog="$2" timeout_marker kill_monitor_pid
     shift 2
@@ -74,7 +74,6 @@ function _b_timeout_main {
 #        echo `date` before prog >>/tmp/xx
         "$prog" "$@"
         exit_code=$?
-echo after prog exec >&2
 #        echo `date` after prog >>/tmp/xx
         kill $watchdogpid
 #        echo $(date) kill watchdog >>/tmp/xx

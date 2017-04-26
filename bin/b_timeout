@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+export B_TIMEOUT_IGNORE_CMD=1
 # why $0 rather then $SCRIPT -- works for now hacked rws
 source $(dirname "$0")/timeout.bash
 
