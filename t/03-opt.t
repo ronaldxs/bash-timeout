@@ -14,7 +14,7 @@ BEGIN {
 }
 use Test::More tests => 2;
 
-Readonly our $RUN_CMD => "$Bin/../bin/b_timeout";
+Readonly our $RUN_CMD => "$Bin/../bin/timeout";
 $ENV{B_TIMEOUT_IGNORE_CMD} = 1;
 
 sub capture_s_merged {
