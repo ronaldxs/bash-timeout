@@ -22,10 +22,16 @@ sub capture_s_merged {
     my $x = capture_merged { system @cmd };
 }
 
-my $cmd_out = capture_s_merged("$RUN_CMD zz echo hello");
-is $?, 1 << 8, 'bad duration gives error exit code';
-like $cmd_out, qr/invalid\b.*\bduration/,
-    'bad duration gives helpful error message';
+my $cmd_out;
+
+SKIP: {
+    capture_s_merged('sleep zz');
+    skip 'sleep does not validate duration parameter (eg mac)', 2 if ($? == 0);
+    $cmd_out = capture_s_merged("$RUN_CMD zz echo hello");
+    is $?, 1 << 8, 'bad duration gives error exit code';
+    like $cmd_out, qr/invalid\b.*\bduration/,
+        'bad duration gives helpful error message';
+};
 
 $cmd_out = capture_s_merged("$RUN_CMD -sNONESUCH 2 echo hello");
 is $?, 1 << 8, 'bad signal gives error exit code';
