@@ -1,8 +1,49 @@
 #!/usr/bin/env bash
 
-# timeout - bash implementation of gnu timeout
+# timeout - bash implementation of GNU timeout
 # Copyright (C) Ronald Schmidt
 # GPL License should be included in source repository.
+
+: <<'END_OF_DOCS'
+
+=head1 NAME
+
+timeout - Send a TERM (or other) signal after a specified duration
+to a command if the command has not already completed.  Like GNU timeout
+but supplies bash function implementation of timeout if check
+for GNU timeout fails.  The duration is passed to "sleep" and so can
+be any value accepted by your system sleep command.
+
+=head1 SYNOPSIS
+
+ $ timeout 2 bash -c 'echo abc; sleep 3; echo def'
+ abc
+ $ echo $?
+ 124
+
+=head2 Switches
+
+=over
+
+=item B<-p>
+
+Preserve exit code from signalled process.  If bash timeout tried to end
+its command with a signal after the timeout duration the exit code is
+normally 124.  The B<-p> option requests that bash timeout use the exit
+code of the signalled process which should usually be 128+(signal number).
+
+=item B<-s>
+
+Alternative signal to be passed to kill if you want a signal other
+than TERM after the duration expires.  Again any value accepted by
+your system kill should work but do not pass a leading '-' (so
+-sINT and not -s-INT).
+
+=back
+
+=cut
+
+END_OF_DOCS
 
 # no set_pgrp and no asychronous wait
 
@@ -97,6 +138,23 @@ function _b_timeout_main {
 function timeout {
     local b_lcl_timeout_to_kill b_lcl_alt_signal b_lcl_is_preserve_exit 
 
+    _timeout_usage() {
+        cat >&2 <<END_USAGE
+Usage: timeout [OPTION] DURATION COMMAND [ARG]...
+
+Send signal to COMMAND after DURATION usually to terminate a command
+after a time limit.  Bash variant implementation of GNU timeout.
+
+    $ timeout 2 bash -c 'echo abc; sleep 3; echo def'
+    abc
+    $ echo $?
+    124
+
+See man page (may be named b_timeout) for more documentation.
+END_USAGE
+        exit 1
+    }
+
     while getopts ps: opt; do
         case "$opt" in
             p)  b_lcl_is_preserve_exit=1
@@ -112,12 +170,17 @@ function timeout {
     done
     shift $((OPTIND-1))
 
+    if [[ $# -eq 0 ]] ; then
+        _timeout_usage
+    fi
+     
     # test timeout duration by sleeping with zeroed out duration
     if ! sleep "${1//[1-9]/0}" ; then
         echo invalid timeout duration: >&2
         echo $'\t'Duration incompatible with sleep after substituting 0 for digits.>&2
         return 1;
     fi
+
     _b_timeout_main "$@"
 }
 
