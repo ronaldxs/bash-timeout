@@ -1,10 +1,9 @@
 # NAME
 
-timeout - Send a TERM (or other) signal after a specified duration to a command
-if it has not already completed.  Like GNU timeout but supplies bash function
-implementation of timeout if check for GNU timeout fails.  The duration is
-passed to "sleep" and so can be any value accepted by your system sleep
-command.
+timeout - Send a TERM (or other) signal after a specified duration to a
+command if it has not already completed.  Attempt to replicate GNU timeout
+with bash function if check for GNU timeout fails.  The duration is passed to
+"sleep" and so can be any value accepted by your system sleep command.
 
 # SYNOPSIS
 

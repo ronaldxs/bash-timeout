@@ -8,11 +8,10 @@
 
 =head1 NAME
 
-timeout - Send a TERM (or other) signal after a specified duration to a command
-if it has not already completed.  Like GNU timeout but supplies bash function
-implementation of timeout if check for GNU timeout fails.  The duration is
-passed to "sleep" and so can be any value accepted by your system sleep
-command.
+timeout - Send a TERM (or other) signal after a specified duration to a
+command if it has not already completed.  Attempt to replicate GNU timeout
+with bash function if check for GNU timeout fails.  The duration is passed to
+"sleep" and so can be any value accepted by your system sleep command.
 
 =head1 SYNOPSIS
 
@@ -44,15 +43,15 @@ should work but do not pass a leading '-' (so -sINT and not -s-INT).
 
 END_OF_DOCS
 
-# no set_pgrp and no asychronous wait
-
+# only define functions if no timeout program or specified override
 if ! [[
     -z $B_TIMEOUT_IGNORE_CMD    &&
     -n $(type -p timeout 2>&1)
 ]] ; then
 
-# only define functions if no timeout program or specified override
 
+# function below partially inspired by:
+# https://unix.stackexchange.com/questions/124127/kill-all-descendant-processes
 function _b_timeout_list_process_tree {
     local IFS=$'\n'
     local p="$1"
@@ -142,7 +141,7 @@ function timeout {
 Usage: timeout [OPTION] DURATION COMMAND [ARG]...
 
 Send signal to COMMAND after DURATION usually to terminate the COMMAND after a
-time limit.  Bash variant implementation of GNU timeout.
+time limit.  Attempt to replicate GNU timeout with bash.
 
     $ timeout 2 bash -c 'echo abc; sleep 3; echo def'
     abc
