@@ -17,7 +17,8 @@ several solutions that looked like:
 
 As some noted this shell solution only kills the starting process/pid for
 "prog" but not necessarily child processes.  You may not know whether your
-program forks and for shell scripting forking may be more common than expected.
+program forks and, for shell scripting, forking may be more common than
+expected.
 
 In the following two examples there seems to be no fork and the hack works.
 

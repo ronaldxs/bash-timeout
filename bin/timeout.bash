@@ -150,7 +150,7 @@ time limit.  Attempt to replicate GNU timeout with bash.
 
 See man page (may be named b_timeout) for more documentation.
 END_USAGE
-        exit 1
+        return 1
     }
 
     while getopts ps: opt; do
